@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { createMonitorSchema, updateMonitorSchema } from '../schemas/monitor.schema.js';
+import { addMonitorJob, removeMonitorJob } from '../lib/queue.js';
 
 export default async function monitorRoutes(fastify: FastifyInstance) {
   fastify.get('/monitors', { preHandler: [fastify.authenticate] }, async (request, reply) => {
@@ -25,6 +26,7 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
     const monitor = await fastify.prisma.monitor.create({
       data: { ...result.data, userId },
     });
+    await addMonitorJob(monitor.id, monitor.url, monitor.intervalMinutes);
     return reply.status(201).send(monitor);
   });
 
@@ -58,6 +60,15 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
       where: { id },
       data: result.data,
     });
+
+    const data = result.data;
+    if (data.url !== undefined || data.intervalMinutes !== undefined || data.active !== undefined) {
+      await removeMonitorJob(id);
+      if (monitor.active) {
+        await addMonitorJob(monitor.id, monitor.url, monitor.intervalMinutes);
+      }
+    }
+
     return reply.send(monitor);
   });
 
@@ -71,6 +82,7 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
       if (!existing) return reply.status(404).send({ error: 'Monitor not found' });
 
       await fastify.prisma.monitor.delete({ where: { id } });
+      await removeMonitorJob(id);
       return reply.send({ success: true });
     },
   );

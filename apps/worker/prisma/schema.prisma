@@ -28,41 +28,89 @@ model RefreshToken {
 }
 
 model Monitor {
-  id               String        @id @default(cuid())
-  userId           String
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name             String
-  url              String
-  intervalMinutes  Int           @default(5)
-  active           Boolean       @default(true)
-  alertThreshold   Int           @default(2)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  checkResults     CheckResult[]
-  incidents        Incident[]
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  url                  String
+  intervalMinutes      Int                   @default(5)
+  active               Boolean               @default(true)
+  alertThreshold       Int                   @default(2)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  checkResults         CheckResult[]
+  incidents            Incident[]
+  notificationChannels NotificationChannel[]
+  stats                MonitorStats[]
 }
 
 model CheckResult {
-  id             String   @id @default(cuid())
-  monitorId      String
-  monitor        Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
-  status         Int
-  responseTimeMs Int
-  isUp           Boolean
-  checkedAt      DateTime @default(now())
-  region         String   @default("us-east")
-  error          String?
-  sslExpiryDays  Int?
+  id              String   @id @default(cuid())
+  monitorId       String
+  monitor         Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  status          Int
+  responseTimeMs  Int
+  isUp            Boolean
+  checkedAt       DateTime @default(now())
+  region          String   @default("us-east")
+  error           String?
+  sslExpiryDays   Int?
   dnsResolutionMs Int?
 }
 
 model Incident {
-  id          String    @id @default(cuid())
-  monitorId   String
-  monitor     Monitor   @relation(fields: [monitorId], references: [id], onDelete: Cascade)
-  startedAt   DateTime  @default(now())
-  resolvedAt  DateTime?
-  durationMs  Int?
-  aiSummary   String?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  monitorId  String
+  monitor    Monitor   @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  startedAt  DateTime  @default(now())
+  resolvedAt DateTime?
+  durationMs Int?
+  aiSummary  String?
+  createdAt  DateTime  @default(now())
+}
+
+enum NotificationChannelType {
+  EMAIL
+  SLACK
+  WEBHOOK
+}
+
+enum AlertType {
+  DOWN
+  RECOVERED
+  SSL_EXPIRY
+}
+
+model NotificationChannel {
+  id        String                  @id @default(cuid())
+  monitorId String
+  monitor   Monitor                 @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  type      NotificationChannelType
+  target    String
+  active    Boolean                 @default(true)
+  createdAt DateTime                @default(now())
+  alertLogs ChannelAlertLog[]
+}
+
+model ChannelAlertLog {
+  id        String              @id @default(cuid())
+  monitorId String
+  channelId String
+  channel   NotificationChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  alertType AlertType
+  sentAt    DateTime            @default(now())
+}
+
+model MonitorStats {
+  id                String   @id @default(cuid())
+  monitorId         String
+  monitor           Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  periodDays        Int
+  uptimePercent     Float
+  totalChecks       Int
+  totalIncidents    Int
+  avgResponseTimeMs Float
+  calculatedAt      DateTime @default(now())
+
+  @@unique([monitorId, periodDays])
 }

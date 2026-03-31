@@ -86,4 +86,21 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
       return reply.send({ success: true });
     },
   );
+
+  fastify.get(
+    '/monitors/:id/stats',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const userId = (request.user as { sub: string }).sub;
+      const monitor = await fastify.prisma.monitor.findFirst({ where: { id, userId } });
+      if (!monitor) return reply.status(404).send({ error: 'Monitor not found' });
+
+      const stats = await fastify.prisma.monitorStats.findMany({
+        where: { monitorId: id },
+        orderBy: { calculatedAt: 'desc' },
+      });
+      return reply.send(stats);
+    },
+  );
 }

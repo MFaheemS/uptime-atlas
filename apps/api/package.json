@@ -13,6 +13,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@uptime-atlas/shared": "workspace:*",
     "fastify": "^4.28.1",
     "@fastify/jwt": "^8.0.1",
     "@fastify/cookie": "^9.4.0",

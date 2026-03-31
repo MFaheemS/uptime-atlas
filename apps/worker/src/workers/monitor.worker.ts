@@ -5,13 +5,14 @@ import { logger } from '../lib/logger.js';
 import { checkHttp } from '../checks/http.check.js';
 import { checkSsl } from '../checks/ssl.check.js';
 import { checkDns } from '../checks/dns.check.js';
+import { dispatchAlert } from '@uptime-atlas/shared';
 
 const REGION = process.env['REGION'] ?? 'us-east';
 
 async function handleIncidentDetection(monitorId: string, isUp: boolean): Promise<void> {
   const monitor = await prisma.monitor.findUnique({
     where: { id: monitorId },
-    select: { alertThreshold: true },
+    select: { alertThreshold: true, id: true, name: true, url: true },
   });
 
   if (!monitor) return;
@@ -32,18 +33,26 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
   if (isUp && openIncident) {
     const now = new Date();
     const durationMs = now.getTime() - openIncident.startedAt.getTime();
-    await prisma.incident.update({
+    const resolved = await prisma.incident.update({
       where: { id: openIncident.id },
       data: { resolvedAt: now, durationMs },
     });
     logger.info({ monitorId }, 'Incident resolved');
+    await dispatchAlert(prisma, monitorId, 'RECOVERED', {
+      monitor,
+      incident: resolved,
+    });
     return;
   }
 
   if (!isUp && !openIncident) {
     if (recentResults.length === threshold && recentResults.every((r) => !r.isUp)) {
-      await prisma.incident.create({ data: { monitorId } });
+      const incident = await prisma.incident.create({ data: { monitorId } });
       logger.info({ monitorId }, 'Incident created');
+      await dispatchAlert(prisma, monitorId, 'DOWN', {
+        monitor,
+        incident,
+      });
     }
     return;
   }
@@ -75,6 +84,19 @@ export function createMonitorWorker() {
       });
 
       await handleIncidentDetection(monitorId, http.isUp);
+
+      if (ssl.expiryDays !== null && ssl.expiryDays !== undefined && ssl.expiryDays <= 30) {
+        const monitor = await prisma.monitor.findUnique({
+          where: { id: monitorId },
+          select: { id: true, name: true, url: true },
+        });
+        if (monitor) {
+          await dispatchAlert(prisma, monitorId, 'SSL_EXPIRY', {
+            monitor,
+            daysRemaining: ssl.expiryDays,
+          });
+        }
+      }
 
       logger.info(
         { monitorId, isUp: http.isUp, responseTimeMs: http.responseTimeMs },

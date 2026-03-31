@@ -7,6 +7,7 @@ import swaggerPlugin from './plugins/swagger.js';
 import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
 import monitorRoutes from './routes/monitors.js';
+import notificationRoutes from './routes/notifications.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -23,6 +24,7 @@ export async function buildApp() {
   fastify.register(healthRoutes);
   fastify.register(authRoutes);
   fastify.register(monitorRoutes);
+  fastify.register(notificationRoutes);
 
   return fastify;
 }

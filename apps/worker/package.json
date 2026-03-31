@@ -9,6 +9,7 @@
     "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 vitest run"
   },
   "dependencies": {
+    "@uptime-atlas/shared": "workspace:*",
     "@prisma/client": "^5.22.0",
     "bullmq": "^5.28.2",
     "dotenv": "^16.4.5",

@@ -95,7 +95,7 @@ export function AddMonitorModal({
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+      <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-xl shadow-2xl p-6 w-full sm:max-w-md sm:mx-4 min-h-screen sm:min-h-0 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add Monitor</h3>
           <button

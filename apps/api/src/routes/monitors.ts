@@ -23,8 +23,17 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'Validation failed', details: result.error.errors });
     }
     const userId = (request.user as { sub: string }).sub;
+    // Auto-generate slug from name if not provided
+    const slug =
+      result.data.slug ??
+      result.data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') +
+        '-' +
+        Math.random().toString(36).slice(2, 6);
     const monitor = await fastify.prisma.monitor.create({
-      data: { ...result.data, userId },
+      data: { ...result.data, slug, userId },
     });
     await addMonitorJob(monitor.id, monitor.url, monitor.intervalMinutes);
     return reply.status(201).send(monitor);

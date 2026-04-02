@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatusBadge } from './StatusBadge';
 import { UptimeBadge } from './UptimeBadge';
@@ -12,7 +13,7 @@ interface Monitor {
   responseTime?: number;
 }
 
-export function MonitorCard({ monitor }: { monitor: Monitor }) {
+export const MonitorCard = memo(function MonitorCard({ monitor }: { monitor: Monitor }) {
   const navigate = useNavigate();
 
   return (
@@ -51,4 +52,4 @@ export function MonitorCard({ monitor }: { monitor: Monitor }) {
       </div>
     </div>
   );
-}
+});

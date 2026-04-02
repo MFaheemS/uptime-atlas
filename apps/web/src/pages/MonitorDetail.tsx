@@ -62,6 +62,16 @@ export function MonitorDetail() {
           <p className="text-sm text-gray-500 dark:text-gray-400">{monitor.url}</p>
         </div>
         <div className="flex gap-2">
+          {monitor.slug && (
+            <button
+              onClick={() =>
+                navigator.clipboard.writeText(`${window.location.origin}/status/${monitor.slug}`)
+              }
+              className="px-3 py-1.5 text-sm rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800"
+            >
+              Copy status link
+            </button>
+          )}
           <button
             onClick={() => setShowConfirm(true)}
             className="px-3 py-1.5 text-sm rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800"

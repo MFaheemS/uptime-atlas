@@ -9,6 +9,7 @@ export function useCreateMonitor() {
       url: string;
       intervalMinutes: number;
       alertThreshold: number;
+      slug?: string;
     }) => {
       const { data } = await api.post('/monitors', payload);
       return data;

@@ -39,7 +39,7 @@ export function Dashboard() {
 
       {/* Summary bar */}
       {monitors?.length > 0 && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'Total', value: monitors.length },
             { label: 'Up', value: upCount, className: 'text-green-600 dark:text-green-400' },

@@ -11,7 +11,7 @@ export function ConfirmDialog({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+      <div className="bg-white dark:bg-gray-800 rounded-none sm:rounded-xl shadow-xl p-6 w-full sm:max-w-sm sm:mx-4 min-h-screen sm:min-h-0 flex flex-col justify-center sm:block">
         <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{title}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">

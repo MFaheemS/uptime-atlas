@@ -8,6 +8,10 @@ import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
 import monitorRoutes from './routes/monitors.js';
 import notificationRoutes from './routes/notifications.js';
+import statusRoutes from './routes/status.js';
+import incidentRoutes from './routes/incidents.js';
+import userRoutes from './routes/users.js';
+import apiKeyRoutes from './routes/apiKeys.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -25,6 +29,10 @@ export async function buildApp() {
   fastify.register(authRoutes);
   fastify.register(monitorRoutes);
   fastify.register(notificationRoutes);
+  fastify.register(statusRoutes);
+  fastify.register(incidentRoutes);
+  fastify.register(userRoutes);
+  fastify.register(apiKeyRoutes);
 
   return fastify;
 }

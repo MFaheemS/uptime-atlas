@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useMonitor } from '../hooks/useMonitor';
 import { useMonitorStats } from '../hooks/useMonitorStats';
 import { useDeleteMonitor } from '../hooks/useDeleteMonitor';
+import api from '../lib/axios';
 import { StatusBadge } from '../components/StatusBadge';
 import { UptimeBadge } from '../components/UptimeBadge';
 import { ResponseTimeChart } from '../components/ResponseTimeChart';
@@ -23,6 +25,16 @@ export function MonitorDetail() {
   const { data: monitor, isLoading, isError, error } = useMonitor(id!);
   const { data: stats } = useMonitorStats(id!, timeRange);
   const deleteMutation = useDeleteMonitor();
+  const { data: anomalies } = useQuery({
+    queryKey: ['anomalies', id],
+    queryFn: async () => {
+      const { data } = await api.get(`/monitors/${id}/anomalies`);
+      return data as Array<{ detectedAt: string; responseTimeMs: number }>;
+    },
+    enabled: !!id,
+    staleTime: 60_000,
+    retry: false,
+  });
 
   async function handleDelete() {
     await deleteMutation.mutateAsync(id!);
@@ -133,7 +145,7 @@ export function MonitorDetail() {
         <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
           Response Time
         </h3>
-        <ResponseTimeChart data={chartData} timeRange={timeRange} />
+        <ResponseTimeChart data={chartData} timeRange={timeRange} anomalies={anomalies} />
       </div>
 
       {/* Uptime bar */}

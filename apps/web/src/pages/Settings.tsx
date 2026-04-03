@@ -161,6 +161,7 @@ function NotificationsTab() {
     alertOnDown: boolean;
     alertOnRecovered: boolean;
     alertOnSslExpiry: boolean;
+    weeklyDigestEnabled: boolean;
   } | null>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -171,6 +172,7 @@ function NotificationsTab() {
       alertOnDown: true,
       alertOnRecovered: true,
       alertOnSslExpiry: true,
+      weeklyDigestEnabled: true,
     };
 
   async function handleSave() {
@@ -205,6 +207,7 @@ function NotificationsTab() {
             { key: 'alertOnDown', label: 'Notify when monitor goes DOWN' },
             { key: 'alertOnRecovered', label: 'Notify when monitor RECOVERS' },
             { key: 'alertOnSslExpiry', label: 'Notify on SSL certificate expiry' },
+            { key: 'weeklyDigestEnabled', label: 'Receive weekly AI monitoring digest email' },
           ] as const
         ).map(({ key, label }) => (
           <label key={key} className="flex items-center gap-3 cursor-pointer">

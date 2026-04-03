@@ -9,12 +9,14 @@
     "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 vitest run"
   },
   "dependencies": {
-    "@uptime-atlas/shared": "workspace:*",
     "@prisma/client": "^5.22.0",
+    "@uptime-atlas/shared": "workspace:*",
     "bullmq": "^5.28.2",
     "dotenv": "^16.4.5",
+    "groq-sdk": "^1.1.2",
     "ioredis": "^5.4.1",
     "pino": "^9.5.0",
+    "resend": "^4.0.0",
     "undici": "^6.21.0"
   },
   "devDependencies": {

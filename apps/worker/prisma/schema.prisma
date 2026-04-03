@@ -8,14 +8,27 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  monitors     Monitor[]
-  refreshTokens RefreshToken[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  passwordHash            String
+  name                    String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  monitors                Monitor[]
+  refreshTokens           RefreshToken[]
+  notificationPreferences NotificationPreferences?
+}
+
+model NotificationPreferences {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertOnDown         Boolean  @default(true)
+  alertOnRecovered    Boolean  @default(true)
+  alertOnSslExpiry    Boolean  @default(true)
+  weeklyDigestEnabled Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model RefreshToken {
@@ -33,6 +46,7 @@ model Monitor {
   user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   name                 String
   url                  String
+  slug                 String?               @unique
   intervalMinutes      Int                   @default(5)
   active               Boolean               @default(true)
   alertThreshold       Int                   @default(2)
@@ -42,20 +56,22 @@ model Monitor {
   incidents            Incident[]
   notificationChannels NotificationChannel[]
   stats                MonitorStats[]
+  anomalyEvents        AnomalyEvent[]
 }
 
 model CheckResult {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   monitorId       String
-  monitor         Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  monitor         Monitor        @relation(fields: [monitorId], references: [id], onDelete: Cascade)
   status          Int
   responseTimeMs  Int
   isUp            Boolean
-  checkedAt       DateTime @default(now())
-  region          String   @default("us-east")
+  checkedAt       DateTime       @default(now())
+  region          String         @default("us-east")
   error           String?
   sslExpiryDays   Int?
   dnsResolutionMs Int?
+  anomalyEvents   AnomalyEvent[]
 }
 
 model Incident {
@@ -113,4 +129,16 @@ model MonitorStats {
   calculatedAt      DateTime @default(now())
 
   @@unique([monitorId, periodDays])
+}
+
+model AnomalyEvent {
+  id                 String      @id @default(cuid())
+  monitorId          String
+  monitor            Monitor     @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  checkResultId      String
+  checkResult        CheckResult @relation(fields: [checkResultId], references: [id], onDelete: Cascade)
+  zScore             Float
+  responseTimeMs     Int
+  meanResponseTimeMs Float
+  detectedAt         DateTime    @default(now())
 }

@@ -6,6 +6,8 @@ import { checkHttp } from '../checks/http.check.js';
 import { checkSsl } from '../checks/ssl.check.js';
 import { checkDns } from '../checks/dns.check.js';
 import { dispatchAlert } from '@uptime-atlas/shared';
+import { generateIncidentSummary } from '@uptime-atlas/shared';
+import { detectAnomaly } from '@uptime-atlas/shared';
 
 const REGION = process.env['REGION'] ?? 'us-east';
 
@@ -53,11 +55,70 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
         monitor,
         incident,
       });
+
+      // Generate AI summary asynchronously — do not block the job
+      setImmediate(() => {
+        void (async () => {
+          try {
+            const checkResults = await prisma.checkResult.findMany({
+              where: { monitorId },
+              orderBy: { checkedAt: 'desc' },
+              take: 10,
+              select: { status: true, responseTimeMs: true, error: true, checkedAt: true },
+            });
+            const summary = await generateIncidentSummary(incident, checkResults, monitor);
+            if (summary) {
+              await prisma.incident.update({
+                where: { id: incident.id },
+                data: { aiSummary: summary },
+              });
+              logger.info({ monitorId, incidentId: incident.id }, 'AI summary saved');
+            }
+          } catch (err) {
+            logger.warn({ err, monitorId }, 'Failed to generate AI incident summary');
+          }
+        })();
+      });
     }
     return;
   }
 
   // isUp=false AND openIncident exists — already tracking, do nothing
+}
+
+async function handleAnomalyDetection(
+  monitorId: string,
+  checkResultId: string,
+  responseTimeMs: number,
+): Promise<void> {
+  try {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentResults = await prisma.checkResult.findMany({
+      where: { monitorId, checkedAt: { gte: since24h } },
+      select: { responseTimeMs: true },
+    });
+
+    const anomaly = detectAnomaly(responseTimeMs, recentResults);
+    if (anomaly.isAnomaly) {
+      const values = recentResults.map((r) => r.responseTimeMs);
+      const mean = values.reduce((s, v) => s + v, 0) / values.length;
+      await prisma.anomalyEvent.create({
+        data: {
+          monitorId,
+          checkResultId,
+          zScore: anomaly.zScore,
+          responseTimeMs,
+          meanResponseTimeMs: mean,
+        },
+      });
+      logger.info(
+        { monitorId, zScore: anomaly.zScore, message: anomaly.message },
+        'Anomaly detected',
+      );
+    }
+  } catch (err) {
+    logger.warn({ err, monitorId }, 'Anomaly detection failed');
+  }
 }
 
 export function createMonitorWorker() {
@@ -70,7 +131,7 @@ export function createMonitorWorker() {
 
       const [http, ssl, dns] = await Promise.all([checkHttp(url), checkSsl(url), checkDns(url)]);
 
-      await prisma.checkResult.create({
+      const checkResult = await prisma.checkResult.create({
         data: {
           monitorId,
           isUp: http.isUp,
@@ -84,6 +145,7 @@ export function createMonitorWorker() {
       });
 
       await handleIncidentDetection(monitorId, http.isUp);
+      await handleAnomalyDetection(monitorId, checkResult.id, http.responseTimeMs);
 
       if (ssl.expiryDays !== null && ssl.expiryDays !== undefined && ssl.expiryDays <= 30) {
         const monitor = await prisma.monitor.findUnique({

@@ -2,6 +2,11 @@ import 'dotenv/config';
 import { createMonitorWorker } from './workers/monitor.worker.js';
 import { syncScheduledJobs } from './jobs/scheduler.js';
 import { createSlaQueue, createSlaWorker, scheduleSlaJob } from './jobs/sla.job.js';
+import {
+  createDigestQueue,
+  createDigestWorker,
+  scheduleDigestJob,
+} from './jobs/weekly-digest.job.js';
 import { logger } from './lib/logger.js';
 
 async function main() {
@@ -15,6 +20,11 @@ async function main() {
   await scheduleSlaJob(slaQueue);
   logger.info('SLA worker created and job scheduled');
 
+  const digestQueue = createDigestQueue();
+  const digestWorker = createDigestWorker();
+  await scheduleDigestJob(digestQueue);
+  logger.info('Weekly digest worker created and job scheduled');
+
   await syncScheduledJobs();
   logger.info('Scheduled jobs synced');
 
@@ -23,6 +33,8 @@ async function main() {
     await worker.close();
     await slaWorker.close();
     await slaQueue.close();
+    await digestWorker.close();
+    await digestQueue.close();
     logger.info('Workers closed');
     process.exit(0);
   });

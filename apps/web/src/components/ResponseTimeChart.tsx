@@ -6,14 +6,37 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceDot,
 } from 'recharts';
 
 interface DataPoint {
   time: string;
   responseTime: number;
+  checkedAt?: string;
 }
 
-export function ResponseTimeChart({ data, timeRange }: { data: DataPoint[]; timeRange?: string }) {
+interface AnomalyPoint {
+  detectedAt: string;
+  responseTimeMs: number;
+}
+
+export function ResponseTimeChart({
+  data,
+  timeRange,
+  anomalies,
+}: {
+  data: DataPoint[];
+  timeRange?: string;
+  anomalies?: AnomalyPoint[];
+}) {
+  // Build a set of time labels where anomalies occurred for quick lookup
+  const anomalyTimes = new Set(
+    (anomalies ?? []).map((a) => {
+      const d = new Date(a.detectedAt);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }),
+  );
+
   return (
     <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
@@ -29,6 +52,19 @@ export function ResponseTimeChart({ data, timeRange }: { data: DataPoint[]; time
             dot={false}
             strokeWidth={2}
           />
+          {data
+            .filter((d) => anomalyTimes.has(d.time))
+            .map((d) => (
+              <ReferenceDot
+                key={d.time}
+                x={d.time}
+                y={d.responseTime}
+                r={5}
+                fill="#f97316"
+                stroke="white"
+                strokeWidth={1}
+              />
+            ))}
         </LineChart>
       </ResponsiveContainer>
       {timeRange && <p className="text-xs text-center text-gray-400 mt-1">Range: {timeRange}</p>}

@@ -15,6 +15,7 @@ const notificationPrefsSchema = z.object({
   alertOnDown: z.boolean(),
   alertOnRecovered: z.boolean(),
   alertOnSslExpiry: z.boolean(),
+  weeklyDigestEnabled: z.boolean().optional(),
 });
 
 export default async function userRoutes(fastify: FastifyInstance) {

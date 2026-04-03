@@ -21,14 +21,15 @@ model User {
 }
 
 model NotificationPreferences {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  alertOnDown       Boolean  @default(true)
-  alertOnRecovered  Boolean  @default(true)
-  alertOnSslExpiry  Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertOnDown         Boolean  @default(true)
+  alertOnRecovered    Boolean  @default(true)
+  alertOnSslExpiry    Boolean  @default(true)
+  weeklyDigestEnabled Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model ApiKey {
@@ -66,6 +67,7 @@ model Monitor {
   incidents            Incident[]
   notificationChannels NotificationChannel[]
   stats                MonitorStats[]
+  anomalyEvents        AnomalyEvent[]
 }
 
 model CheckResult {
@@ -80,6 +82,7 @@ model CheckResult {
   error           String?
   sslExpiryDays   Int?
   dnsResolutionMs Int?
+  anomalyEvents   AnomalyEvent[]
 }
 
 model Incident {
@@ -137,4 +140,16 @@ model MonitorStats {
   calculatedAt      DateTime @default(now())
 
   @@unique([monitorId, periodDays])
+}
+
+model AnomalyEvent {
+  id                  String      @id @default(cuid())
+  monitorId           String
+  monitor             Monitor     @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  checkResultId       String
+  checkResult         CheckResult @relation(fields: [checkResultId], references: [id], onDelete: Cascade)
+  zScore              Float
+  responseTimeMs      Int
+  meanResponseTimeMs  Float
+  detectedAt          DateTime    @default(now())
 }

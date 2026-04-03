@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { createMonitorSchema, updateMonitorSchema } from '../schemas/monitor.schema.js';
 import { addMonitorJob, removeMonitorJob } from '../lib/queue.js';
+import { parseSearchQuery } from '@uptime-atlas/shared';
 
 export default async function monitorRoutes(fastify: FastifyInstance) {
   fastify.get('/monitors', { preHandler: [fastify.authenticate] }, async (request, reply) => {
@@ -110,6 +111,73 @@ export default async function monitorRoutes(fastify: FastifyInstance) {
         orderBy: { calculatedAt: 'desc' },
       });
       return reply.send(stats);
+    },
+  );
+
+  fastify.get(
+    '/monitors/:id/anomalies',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const userId = (request.user as { sub: string }).sub;
+      const monitor = await fastify.prisma.monitor.findFirst({ where: { id, userId } });
+      if (!monitor) return reply.status(404).send({ error: 'Monitor not found' });
+
+      const anomalies = await fastify.prisma.anomalyEvent.findMany({
+        where: { monitorId: id },
+        orderBy: { detectedAt: 'desc' },
+        take: 100,
+      });
+      return reply.send(anomalies);
+    },
+  );
+
+  fastify.post(
+    '/monitors/search',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const userId = (request.user as { sub: string }).sub;
+      const { query } = request.body as { query: string };
+
+      const filter = await parseSearchQuery(query ?? '');
+
+      const monitors = await fastify.prisma.monitor.findMany({
+        where: {
+          userId,
+          ...(filter?.nameContains
+            ? { name: { contains: filter.nameContains, mode: 'insensitive' } }
+            : {}),
+        },
+        include: {
+          checkResults: { orderBy: { checkedAt: 'desc' }, take: 1 },
+          stats: { where: { periodDays: 7 }, orderBy: { calculatedAt: 'desc' }, take: 1 },
+        },
+      });
+
+      let filtered = monitors;
+
+      if (filter) {
+        if (filter.status === 'DOWN') {
+          filtered = filtered.filter((m) => m.checkResults[0] && !m.checkResults[0].isUp);
+        } else if (filter.status === 'UP') {
+          filtered = filtered.filter((m) => !m.checkResults[0] || m.checkResults[0].isUp);
+        }
+        if (filter.uptimePercentMin !== undefined) {
+          filtered = filtered.filter(
+            (m) => (m.stats[0]?.uptimePercent ?? 100) >= filter.uptimePercentMin!,
+          );
+        }
+        if (filter.sslExpiryDaysMax !== undefined) {
+          filtered = filtered.filter(
+            (m) =>
+              m.checkResults[0]?.sslExpiryDays !== null &&
+              m.checkResults[0]?.sslExpiryDays !== undefined &&
+              m.checkResults[0].sslExpiryDays <= filter.sslExpiryDaysMax!,
+          );
+        }
+      }
+
+      return reply.send(filtered);
     },
   );
 }

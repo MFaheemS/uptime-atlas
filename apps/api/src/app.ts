@@ -12,6 +12,7 @@ import statusRoutes from './routes/status.js';
 import incidentRoutes from './routes/incidents.js';
 import userRoutes from './routes/users.js';
 import apiKeyRoutes from './routes/apiKeys.js';
+import deviceTokenRoutes from './routes/deviceTokens.js';
 
 export async function buildApp() {
   const fastify = Fastify({
@@ -33,6 +34,7 @@ export async function buildApp() {
   fastify.register(incidentRoutes);
   fastify.register(userRoutes);
   fastify.register(apiKeyRoutes);
+  fastify.register(deviceTokenRoutes);
 
   return fastify;
 }

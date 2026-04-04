@@ -13,6 +13,7 @@
     "@uptime-atlas/shared": "workspace:*",
     "bullmq": "^5.28.2",
     "dotenv": "^16.4.5",
+    "expo-server-sdk": "^6.1.0",
     "groq-sdk": "^1.1.2",
     "ioredis": "^5.4.1",
     "pino": "^9.5.0",

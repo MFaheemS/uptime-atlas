@@ -18,6 +18,7 @@ model User {
   refreshTokens           RefreshToken[]
   notificationPreferences NotificationPreferences?
   apiKeys                 ApiKey[]
+  deviceTokens            DeviceToken[]
 }
 
 model NotificationPreferences {
@@ -152,4 +153,14 @@ model AnomalyEvent {
   responseTimeMs      Int
   meanResponseTimeMs  Float
   detectedAt          DateTime    @default(now())
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

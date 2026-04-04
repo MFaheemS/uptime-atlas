@@ -8,13 +8,14 @@ import { checkDns } from '../checks/dns.check.js';
 import { dispatchAlert } from '@uptime-atlas/shared';
 import { generateIncidentSummary } from '@uptime-atlas/shared';
 import { detectAnomaly } from '@uptime-atlas/shared';
+import { sendPushNotification } from '../notifications/push.js';
 
 const REGION = process.env['REGION'] ?? 'us-east';
 
 async function handleIncidentDetection(monitorId: string, isUp: boolean): Promise<void> {
   const monitor = await prisma.monitor.findUnique({
     where: { id: monitorId },
-    select: { alertThreshold: true, id: true, name: true, url: true },
+    select: { alertThreshold: true, id: true, name: true, url: true, userId: true },
   });
 
   if (!monitor) return;
@@ -44,6 +45,12 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
       monitor,
       incident: resolved,
     });
+    await sendPushNotification(
+      monitor.userId,
+      'Monitor recovered',
+      `${monitor.name} is back online`,
+      { monitorId },
+    );
     return;
   }
 
@@ -55,6 +62,12 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
         monitor,
         incident,
       });
+      await sendPushNotification(
+        monitor.userId,
+        'Monitor down',
+        `${monitor.name} is not responding`,
+        { monitorId },
+      );
 
       // Generate AI summary asynchronously — do not block the job
       setImmediate(() => {

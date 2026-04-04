@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "jsx": "react-native",
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+    "strict": true,
+    "paths": {
+      "@uptime-atlas/shared": ["../../packages/shared/src/index.ts"],
+      "@uptime-atlas/shared/*": ["../../packages/shared/src/*"]
+    }
+  }
 }

@@ -8,6 +8,7 @@ import { SparklineChart } from '../../src/components/SparklineChart';
 import { LoadingSpinner } from '../../src/components/LoadingSpinner';
 import { ErrorView } from '../../src/components/ErrorView';
 import { Card } from '../../src/components/Card';
+import { SkeletonRow } from '../../src/components/SkeletonRow';
 
 type TimeRange = '1h' | '24h' | '7d';
 
@@ -21,7 +22,7 @@ export default function MonitorDetailScreen() {
     isError: monitorError,
     refetch,
   } = useMonitor(id);
-  const { data: stats } = useMonitorStats(id, range);
+  const { data: stats, isLoading: statsLoading } = useMonitorStats(id, range);
 
   if (monitorLoading) return <LoadingSpinner />;
   if (monitorError || !monitor) return <ErrorView onRetry={refetch} />;
@@ -79,7 +80,11 @@ export default function MonitorDetailScreen() {
             ))}
           </View>
         </View>
-        <SparklineChart data={chartData} height={100} width={320} />
+        {statsLoading ? (
+          <SkeletonRow height={100} />
+        ) : (
+          <SparklineChart data={chartData} height={100} width={320} />
+        )}
       </Card>
 
       {last5.length > 0 && (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
@@ -426,6 +426,9 @@ const TABS: { id: Tab; label: string }[] = [
 export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const { theme, setTheme } = useThemeStore();
+  useEffect(() => {
+    document.title = 'Settings — UptimeAtlas';
+  }, []);
 
   return (
     <div className="p-6">

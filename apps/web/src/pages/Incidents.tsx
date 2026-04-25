@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/axios';
 import { useMonitors } from '../hooks/useMonitors';
@@ -19,6 +19,10 @@ export function Incidents() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = 'Incidents — UptimeAtlas';
+  }, []);
 
   const { data: monitors } = useMonitors();
 

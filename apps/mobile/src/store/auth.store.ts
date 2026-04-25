@@ -20,6 +20,7 @@ interface AuthState {
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   refresh: () => Promise<boolean>;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => {
@@ -84,5 +85,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         return false;
       }
     },
+
+    setUser: (user) => set({ user }),
   };
 });

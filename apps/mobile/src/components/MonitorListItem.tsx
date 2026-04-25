@@ -1,7 +1,9 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { StatusDot } from './StatusDot';
 import { UptimeBadge } from './UptimeBadge';
+import { useRecentAnomaly } from '../hooks/useAnomalies';
 
 interface Monitor {
   id: string;
@@ -21,10 +23,19 @@ export function MonitorListItem({ monitor, onPress }: Props) {
   const lastChecked = monitor.lastCheckedAt
     ? new Date(monitor.lastCheckedAt).toLocaleTimeString()
     : '—';
+  const hasAnomaly = useRecentAnomaly(monitor.id);
+
+  function handlePress() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
-      <StatusDot status={monitor.status} />
+    <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
+      <View style={styles.dotWrapper}>
+        <StatusDot status={monitor.status} />
+        {hasAnomaly && <View style={styles.anomalyDot} />}
+      </View>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
           {monitor.name}
@@ -50,6 +61,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e5e7eb',
     gap: 10,
+  },
+  dotWrapper: {
+    position: 'relative',
+  },
+  anomalyDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#f97316',
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   info: {
     flex: 1,

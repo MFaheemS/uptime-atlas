@@ -50,6 +50,7 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
       'Monitor recovered',
       `${monitor.name} is back online`,
       { monitorId },
+      monitorId,
     );
     return;
   }
@@ -67,6 +68,7 @@ async function handleIncidentDetection(monitorId: string, isUp: boolean): Promis
         'Monitor down',
         `${monitor.name} is not responding`,
         { monitorId },
+        monitorId,
       );
 
       // Generate AI summary asynchronously — do not block the job

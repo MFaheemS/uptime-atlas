@@ -94,4 +94,36 @@ export default async function userRoutes(fastify: FastifyInstance) {
     await fastify.prisma.user.delete({ where: { id: userId } });
     return reply.send({ success: true });
   });
+
+  fastify.get(
+    '/users/me/push-preferences',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const userId = (request.user as { sub: string }).sub;
+      const prefs = await fastify.prisma.monitorPushPreference.findMany({ where: { userId } });
+      return reply.send(prefs);
+    },
+  );
+
+  fastify.patch(
+    '/users/me/push-preferences',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const userId = (request.user as { sub: string }).sub;
+      const body = request.body as Array<{ monitorId: string; enabled: boolean }>;
+      if (!Array.isArray(body)) {
+        return reply.status(400).send({ error: 'Expected array of {monitorId, enabled}' });
+      }
+      const results = await Promise.all(
+        body.map(({ monitorId, enabled }) =>
+          fastify.prisma.monitorPushPreference.upsert({
+            where: { userId_monitorId: { userId, monitorId } },
+            create: { userId, monitorId, enabled },
+            update: { enabled },
+          }),
+        ),
+      );
+      return reply.send(results);
+    },
+  );
 }

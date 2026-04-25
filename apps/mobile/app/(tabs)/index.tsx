@@ -3,13 +3,23 @@ import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useMonitors } from '../../src/hooks/useMonitors';
 import { MonitorListItem } from '../../src/components/MonitorListItem';
-import { LoadingSpinner } from '../../src/components/LoadingSpinner';
+import { SkeletonRow } from '../../src/components/SkeletonRow';
 import { EmptyState } from '../../src/components/EmptyState';
+
+function SkeletonList() {
+  return (
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <SkeletonRow key={i} height={64} />
+      ))}
+    </View>
+  );
+}
 
 export default function DashboardScreen() {
   const { data: monitors, isLoading, refetch } = useMonitors();
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <SkeletonList />;
 
   const list = monitors ?? [];
   const downCount = list.filter((m: any) => m.status === 'DOWN').length;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import api from '../lib/axios';
@@ -21,6 +21,9 @@ type FormErrors = Partial<Record<keyof Fields, string>>;
 
 export function Register() {
   const navigate = useNavigate();
+  useEffect(() => {
+    document.title = 'Create Account — UptimeAtlas';
+  }, []);
   const { setToken, setUser } = useAuthStore();
   const [fields, setFields] = useState<Fields>({
     name: '',

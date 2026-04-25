@@ -19,6 +19,7 @@ model User {
   notificationPreferences NotificationPreferences?
   apiKeys                 ApiKey[]
   deviceTokens            DeviceToken[]
+  pushPreferences         MonitorPushPreference[]
 }
 
 model NotificationPreferences {
@@ -163,4 +164,15 @@ model DeviceToken {
   platform  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MonitorPushPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  monitorId String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, monitorId])
 }

@@ -45,12 +45,76 @@ Welcome, and thank you for your interest in contributing! This guide will help y
    ```
 
 6. **Start the development servers**
+
    ```bash
    pnpm dev
    ```
 
    - API: http://localhost:3001
    - Web: http://localhost:5173
+
+## Mobile Development
+
+### Running the app locally with Expo Go
+
+1. Install the **Expo Go** app on your iOS or Android device.
+
+2. Start the mobile dev server:
+
+   ```bash
+   cd apps/mobile
+   pnpm start
+   ```
+
+3. Scan the QR code shown in the terminal with Expo Go (Android) or the Camera app (iOS).
+
+4. Ensure your phone and development machine are on the same WiFi network.
+
+### Environment
+
+The mobile app reads `EXPO_PUBLIC_API_URL` from `apps/mobile/.env`:
+
+```
+EXPO_PUBLIC_API_URL=http://192.168.x.x:3001
+```
+
+Replace the IP with your machine's local network IP (`ipconfig` on Windows, `ifconfig` on Mac/Linux).
+
+### EAS Builds
+
+[EAS (Expo Application Services)](https://expo.dev/eas) builds the app in the cloud.
+
+**One-time setup:**
+
+```bash
+npm install -g eas-cli
+eas login        # create a free account at expo.dev
+cd apps/mobile
+eas build:configure
+```
+
+**Build a preview APK (Android, fastest to share):**
+
+```bash
+eas build --platform android --profile preview
+```
+
+Free tier: 30 builds/month. The build takes ~10–15 minutes. Download the APK from the [Expo dashboard](https://expo.dev).
+
+**Build profiles** (defined in `apps/mobile/eas.json`):
+
+| Profile       | Distribution         | Notes                                  |
+| ------------- | -------------------- | -------------------------------------- |
+| `development` | Internal (simulator) | Includes dev client                    |
+| `preview`     | Internal APK         | Fastest to install and share           |
+| `production`  | Store                | For App Store / Google Play submission |
+
+### Testing push notifications locally
+
+1. Run the app in Expo Go on a real device (push notifications don't work in simulators).
+2. Open [https://expo.dev/notifications](https://expo.dev/notifications) in a browser.
+3. Enter your Expo push token (logged to the console when the app starts) and send a test notification.
+4. Alternatively, take a monitored site down to trigger a real alert through the worker.
 
 ## Running Tests
 

@@ -9,8 +9,16 @@ export async function sendPushNotification(
   title: string,
   body: string,
   data: Record<string, unknown> = {},
+  monitorId?: string,
 ): Promise<void> {
   try {
+    if (monitorId) {
+      const pref = await prisma.monitorPushPreference.findUnique({
+        where: { userId_monitorId: { userId, monitorId } },
+      });
+      if (pref && !pref.enabled) return;
+    }
+
     const deviceTokens = await prisma.deviceToken.findMany({ where: { userId } });
     if (deviceTokens.length === 0) return;
 

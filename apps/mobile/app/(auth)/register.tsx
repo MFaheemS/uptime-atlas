@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
   Platform,
   StyleSheet,
   ScrollView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { z } from 'zod';
 import { useAuthStore } from '../../src/store/auth.store';
 
@@ -49,10 +52,13 @@ export default function RegisterScreen() {
     }
     setErrors({});
     setIsLoading(true);
+    Keyboard.dismiss();
     try {
       await register(name, email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(tabs)');
     } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setServerError(err?.response?.data?.message ?? 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -96,54 +102,56 @@ export default function RegisterScreen() {
   ];
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.flex}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>Join UptimeAtlas</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Create account</Text>
+          <Text style={styles.subtitle}>Join UptimeAtlas</Text>
 
-        {serverError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorBoxText}>{serverError}</Text>
-          </View>
-        ) : null}
+          {serverError ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorBoxText}>{serverError}</Text>
+            </View>
+          ) : null}
 
-        {fields.map((f) => (
-          <View key={f.key} style={styles.field}>
-            <Text style={styles.label}>{f.label}</Text>
-            <TextInput
-              style={[styles.input, errors[f.key] ? styles.inputError : null]}
-              value={f.value}
-              onChangeText={f.setter}
-              secureTextEntry={f.secure}
-              keyboardType={f.keyboard}
-              autoCapitalize="none"
-              autoComplete={f.autoComplete}
-              placeholder={f.secure ? '••••••••' : undefined}
-            />
-            {errors[f.key] ? <Text style={styles.fieldError}>{errors[f.key]}</Text> : null}
-          </View>
-        ))}
+          {fields.map((f) => (
+            <View key={f.key} style={styles.field}>
+              <Text style={styles.label}>{f.label}</Text>
+              <TextInput
+                style={[styles.input, errors[f.key] ? styles.inputError : null]}
+                value={f.value}
+                onChangeText={f.setter}
+                secureTextEntry={f.secure}
+                keyboardType={f.keyboard}
+                autoCapitalize="none"
+                autoComplete={f.autoComplete}
+                placeholder={f.secure ? '••••••••' : undefined}
+              />
+              {errors[f.key] ? <Text style={styles.fieldError}>{errors[f.key]}</Text> : null}
+            </View>
+          ))}
 
-        <TouchableOpacity
-          style={[styles.button, isLoading ? styles.buttonDisabled : null]}
-          onPress={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Create Account</Text>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, isLoading ? styles.buttonDisabled : null]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Create Account</Text>
+            )}
+          </TouchableOpacity>
 
-        <Link href="/(auth)/login" style={styles.link}>
-          Already have an account? Log in
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Link href="/(auth)/login" style={styles.link}>
+            Already have an account? Log in
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

@@ -16,6 +16,7 @@
     "axios": "^1.14.0",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
+    "expo-haptics": "~14.0.1",
     "expo-device": "^55.0.12",
     "expo-notifications": "^0.32.16",
     "expo-router": "~6.0.23",
@@ -42,7 +43,8 @@
       "./jest.setup.js"
     ],
     "moduleNameMapper": {
-      "expo-modules-core/src/Refs": "<rootDir>/node_modules/expo-modules-core/src/Refs"
+      "expo-modules-core/src/Refs": "<rootDir>/node_modules/expo-modules-core/src/Refs",
+      "expo-haptics": "<rootDir>/src/__mocks__/expo-haptics.ts"
     },
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": [

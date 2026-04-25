@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import api from '../lib/axios';
@@ -13,6 +13,9 @@ type FormErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
 export function Login() {
   const navigate = useNavigate();
+  useEffect(() => {
+    document.title = 'Sign In — UptimeAtlas';
+  }, []);
   const { setToken, setUser } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

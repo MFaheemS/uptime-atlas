@@ -33,6 +33,7 @@ export function Dashboard() {
   const { data: aiStatus } = useAiStatus();
 
   useEffect(() => {
+    document.title = 'Dashboard — UptimeAtlas';
     connectWebSocket();
   }, []);
 
@@ -146,7 +147,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {isLoading && <LoadingSkeleton rows={3} />}
+      {isLoading && <LoadingSkeleton rows={6} />}
       {isError && (
         <ErrorMessage
           message={(error as any)?.message ?? 'Failed to load monitors'}
@@ -186,8 +187,28 @@ export function Dashboard() {
       )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+      {/* Mobile app banner */}
+      <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+            Get the UptimeAtlas mobile app
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+            Monitor your sites on the go with push notifications
+          </p>
+        </div>
+        <a
+          href="https://expo.dev/go"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+        >
+          Open in Expo Go
+        </a>
+      </div>
+
       {/* AI status indicator in footer */}
-      <div className="mt-8 flex justify-end">
+      <div className="mt-4 flex justify-end">
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <span
             className={`w-2 h-2 rounded-full ${

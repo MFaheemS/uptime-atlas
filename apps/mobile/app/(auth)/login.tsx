@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
   Platform,
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Link, router } from 'expo-router';
 import { z } from 'zod';
 import { useAuthStore } from '../../src/store/auth.store';
@@ -40,10 +43,13 @@ export default function LoginScreen() {
     }
     setErrors({});
     setIsLoading(true);
+    Keyboard.dismiss();
     try {
       await login(email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(tabs)');
     } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setServerError(err?.response?.data?.message ?? 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -51,64 +57,66 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.flex}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Sign in to UptimeAtlas</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to UptimeAtlas</Text>
 
-        {serverError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorBoxText}>{serverError}</Text>
+          {serverError ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorBoxText}>{serverError}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={[styles.input, errors.email ? styles.inputError : null]}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+            {errors.email ? <Text style={styles.fieldError}>{errors.email}</Text> : null}
           </View>
-        ) : null}
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, errors.email ? styles.inputError : null]}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            placeholder="you@example.com"
-          />
-          {errors.email ? <Text style={styles.fieldError}>{errors.email}</Text> : null}
-        </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={[styles.input, errors.password ? styles.inputError : null]}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="password"
+              placeholder="••••••••"
+            />
+            {errors.password ? <Text style={styles.fieldError}>{errors.password}</Text> : null}
+          </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={[styles.input, errors.password ? styles.inputError : null]}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="password"
-            placeholder="••••••••"
-          />
-          {errors.password ? <Text style={styles.fieldError}>{errors.password}</Text> : null}
-        </View>
+          <TouchableOpacity
+            style={[styles.button, isLoading ? styles.buttonDisabled : null]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, isLoading ? styles.buttonDisabled : null]}
-          onPress={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
-
-        <Link href="/(auth)/register" style={styles.link}>
-          Don&apos;t have an account? Register
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <Link href="/(auth)/register" style={styles.link}>
+            Don&apos;t have an account? Register
+          </Link>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

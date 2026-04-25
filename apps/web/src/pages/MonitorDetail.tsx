@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMonitor } from '../hooks/useMonitor';
@@ -12,6 +12,7 @@ import { UptimeBar } from '../components/UptimeBar';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Toast } from '../components/Toast';
 
 const TIME_RANGES = ['1h', '24h', '7d', '30d'] as const;
 type TimeRange = (typeof TIME_RANGES)[number];
@@ -21,8 +22,14 @@ export function MonitorDetail() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const { data: monitor, isLoading, isError, error } = useMonitor(id!);
+
+  useEffect(() => {
+    if (monitor?.name) document.title = `${monitor.name} — UptimeAtlas`;
+    else document.title = 'Monitor — UptimeAtlas';
+  }, [monitor?.name]);
   const { data: stats } = useMonitorStats(id!, timeRange);
   const deleteMutation = useDeleteMonitor();
   const { data: anomalies } = useQuery({
@@ -37,8 +44,12 @@ export function MonitorDetail() {
   });
 
   async function handleDelete() {
-    await deleteMutation.mutateAsync(id!);
-    navigate('/');
+    try {
+      await deleteMutation.mutateAsync(id!);
+      navigate('/');
+    } catch {
+      setToast({ message: 'Failed to delete monitor', type: 'error' });
+    }
   }
 
   if (isLoading)
@@ -76,9 +87,10 @@ export function MonitorDetail() {
         <div className="flex gap-2">
           {monitor.slug && (
             <button
-              onClick={() =>
-                navigator.clipboard.writeText(`${window.location.origin}/status/${monitor.slug}`)
-              }
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/status/${monitor.slug}`);
+                setToast({ message: 'Link copied to clipboard', type: 'success' });
+              }}
               className="px-3 py-1.5 text-sm rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800"
             >
               Copy status link
@@ -204,6 +216,7 @@ export function MonitorDetail() {
           onCancel={() => setShowConfirm(false)}
         />
       )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
